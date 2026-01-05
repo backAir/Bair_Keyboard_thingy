@@ -12,6 +12,7 @@ using System.Windows.Shapes;
 
 using System.Drawing;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace Bair_Keyboard_thingy
 {
@@ -20,6 +21,7 @@ namespace Bair_Keyboard_thingy
     /// </summary>
     public partial class MainWindow : Window
     {
+        private QMK_API.QMK_HID trippel_pedal;
         private ContextMenuStrip _trayMenu = new ContextMenuStrip();
         private NotifyIcon _notifyIcon = new NotifyIcon
             {
@@ -32,6 +34,8 @@ namespace Bair_Keyboard_thingy
         public MainWindow()
         {
             InitializeComponent();
+            trippel_pedal = new(0x7C92, 0x0002);
+
 
             this.Closing += MainWindow_Closing!; // event for when we close the window
 
@@ -40,9 +44,21 @@ namespace Bair_Keyboard_thingy
             {
                 ShowWindow();
             };
-            _notifyIcon.BalloonTipTitle = "Bair Keyboard thingy";
+            _notifyIcon.BalloonTipTitle = "Bair's Keyboard thingy";
             _notifyIcon.ContextMenuStrip = _trayMenu;
             _trayMenu.Items.Add("Show", null, (s, e) => ShowWindow());
+            
+
+            var settingsMenu = new ToolStripMenuItem("TrippelPedal");
+
+            // Add "dropdown items" to it
+            settingsMenu.DropDownItems.Add("Layer 0", null, (s, e) => ChangeLayer(trippel_pedal,0));
+            settingsMenu.DropDownItems.Add("Layer 1", null, (s, e) => ChangeLayer(trippel_pedal, 1));
+            settingsMenu.DropDownItems.Add("Layer 2", null, (s, e) => ChangeLayer(trippel_pedal, 2));
+            settingsMenu.DropDownItems.Add("Layer 3", null, (s, e) => ChangeLayer(trippel_pedal, 3));
+
+            // Add the submenu to the tray context menu
+            _trayMenu.Items.Add(settingsMenu);
             _trayMenu.Items.Add(new ToolStripSeparator());
             _trayMenu.Items.Add("Exit", null, (s, e) => ExitApplication());
 
@@ -59,8 +75,31 @@ namespace Bair_Keyboard_thingy
             _notifyIcon.ShowBalloonTip(1000, "Bair Keyboard thingy", "Application minimized to tray.", ToolTipIcon.Info);
         }
 
+
+        private enum PC_TO_HID_IDs: byte
+        {
+            LAYER_CHANGE = 20
+        }
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            var message = new byte[33];
+
+            message[0] = 1;
+            //if (HelloButton.IsChecked == true)
+            //{
+            //    message[1] = 0xAA;
+            //}
+            //else
+            //{
+            //    message[1] = 0xAB;
+            //}
+
+            //! fucked up id's: 01, 02, 04, 0C, 0D, 0E, 11, 12
+            message[1] = ((byte)PC_TO_HID_IDs.LAYER_CHANGE);
+            message[2] = (byte)(HelloButton.IsChecked == true? 1 : 2);
+
+            trippel_pedal.SendAsync(message);
+
             //if (HelloButton.IsChecked == true)
             //{
             //    MessageBox.Show("Hello.");
@@ -69,7 +108,19 @@ namespace Bair_Keyboard_thingy
             //{
             //    MessageBox.Show("Goodbye.");
             //}
-            _notifyIcon.ShowBalloonTip(1000);
+            //_notifyIcon.ShowBalloonTip(1000);
+        }
+
+
+        private void ChangeLayer(QMK_API.QMK_HID keyboard, int layer)
+        {
+            var message = new byte[33];
+
+            message[0] = 1;
+            //! fucked up id's: 01, 02, 04, 0C, 0D, 0E, 11, 12
+            message[1] = ((byte)PC_TO_HID_IDs.LAYER_CHANGE);
+            message[2] = (byte)(layer);
+            keyboard.SendAsync(message);
         }
 
         private void ExitApplication()
