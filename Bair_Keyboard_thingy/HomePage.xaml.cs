@@ -35,6 +35,7 @@ namespace Bair_Keyboard_thingy
         {
             InitializeComponent();
             trippel_pedal = new(0x7C92, 0x0002);
+            trippel_pedal.MessageReceived += OnMessageReceived;
 
 
             this.Closing += MainWindow_Closing!; // event for when we close the window
@@ -134,6 +135,24 @@ namespace Bair_Keyboard_thingy
             Show();
             WindowState = WindowState.Normal;
             Activate();
+        }
+
+        void OnMessageReceived(object? sender, byte[] message)
+        {
+            // Handle the message
+            Debug.WriteLine(
+                $"Received {message.Length} bytes: {string.Join(" ", message)}"
+            );
+            if (message[1] == 21)
+            {
+                LaunchProgram(message[2]);
+            }
+        }
+
+        private void LaunchProgram(int programID)
+        {
+            Debug.Print("launching prism launcher");
+            Process.Start("C:\\PATH\\TO\\PrismLauncher\\prismlauncher.exe");
         }
     }
 }

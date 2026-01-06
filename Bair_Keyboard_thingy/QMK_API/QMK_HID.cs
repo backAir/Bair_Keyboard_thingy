@@ -47,7 +47,6 @@ namespace Bair_Keyboard_thingy.QMK_API
         {
             _vendorId = vendorId;
             _productId = productId;
-            this.MessageReceived += OnMessageReceived;
 
             // Watch for device attach/detach and attempt to connect automatically.
             DeviceList.Local.Changed += OnDeviceListChanged;
@@ -57,13 +56,7 @@ namespace Bair_Keyboard_thingy.QMK_API
         }
 
 
-        void OnMessageReceived(object? sender, byte[] message)
-        {
-            // Handle the message
-            Debug.WriteLine(
-                $"Received {message.Length} bytes: {string.Join(" ", message)}"
-            );
-        }
+
 
         private async void OnDeviceListChanged(object? sender, DeviceListChangedEventArgs e)
         {
@@ -201,6 +194,8 @@ namespace Bair_Keyboard_thingy.QMK_API
                 }
             }
         }
+
+
 
         private void CloseStream_NoLock()
         {
