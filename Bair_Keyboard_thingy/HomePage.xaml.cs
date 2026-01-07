@@ -21,7 +21,8 @@ namespace Bair_Keyboard_thingy
     /// </summary>
     public partial class MainWindow : Window
     {
-        private QMK_API.QMK_HID trippel_pedal;
+        private Dictionary<string, QMK_API.QMK_HID> keyboards = new();
+
         private ContextMenuStrip _trayMenu = new ContextMenuStrip();
         private NotifyIcon _notifyIcon = new NotifyIcon
             {
@@ -31,40 +32,81 @@ namespace Bair_Keyboard_thingy
                 Visible = true,
             };
 
+
+        public void Add_Keyboard(int vendorID, int productID, string name, int layer_count)
+        {
+            QMK_API.QMK_HID keyboard = new(vendorID, productID, name, layer_count);
+            keyboard.MessageReceived += OnMessageReceived;
+            keyboards.Add(name, keyboard);
+        }
+
         public MainWindow()
         {
             InitializeComponent();
-            trippel_pedal = new(0x7C92, 0x0002);
-            trippel_pedal.MessageReceived += OnMessageReceived;
-
-
             this.Closing += MainWindow_Closing!; // event for when we close the window
+            //this.Hide();
+
+            //Add_Keyboard(0x7C92, 0x0001, "pedal", 4);
+            //Add_Keyboard(0x7C92, 0x0002, "trippel_pedal", 4);
+            //Add_Keyboard(0x7C92, 0x0003, "numpad", 4);
+            LoadConfig();
 
             // Optional: double-click on tray icon to restore window
             _notifyIcon.DoubleClick += (s, e) =>
             {
                 ShowWindow();
             };
+            
             _notifyIcon.BalloonTipTitle = "Bair's Keyboard thingy";
             _notifyIcon.ContextMenuStrip = _trayMenu;
             _trayMenu.Items.Add("Show", null, (s, e) => ShowWindow());
-            
 
-            var settingsMenu = new ToolStripMenuItem("TrippelPedal");
-
-            // Add "dropdown items" to it
-            settingsMenu.DropDownItems.Add("Layer 0", null, (s, e) => ChangeLayer(trippel_pedal,0));
-            settingsMenu.DropDownItems.Add("Layer 1", null, (s, e) => ChangeLayer(trippel_pedal, 1));
-            settingsMenu.DropDownItems.Add("Layer 2", null, (s, e) => ChangeLayer(trippel_pedal, 2));
-            settingsMenu.DropDownItems.Add("Layer 3", null, (s, e) => ChangeLayer(trippel_pedal, 3));
-
+            Add_Settings_Menus(_trayMenu);
             // Add the submenu to the tray context menu
-            _trayMenu.Items.Add(settingsMenu);
             _trayMenu.Items.Add(new ToolStripSeparator());
             _trayMenu.Items.Add("Exit", null, (s, e) => ExitApplication());
 
+            Setup_Dropdown();
 
+            //SaveConfig();
         }
+
+        private void LoadConfig()
+        {
+            var data = Config_File.Config.LoadSave();
+            foreach (var keyboard in data.Keyboards)
+            {
+                Add_Keyboard(keyboard.VendorID, keyboard.ProductID, keyboard.Name, keyboard.LayerCount);
+            }
+        }
+        private void SaveConfig()
+        {
+            List <Config_File.KeyboardInfo> keyboardInfoList = new();
+            foreach (var keyboard in keyboards.Values)
+            {
+                var keyboard_enabled = true;
+                keyboardInfoList.Add(new Config_File.KeyboardInfo(keyboard._vendorId, keyboard._productId, keyboard.name, keyboard.layer_count, keyboard_enabled));
+            }
+
+            Config_File.ConfigSave config = new(keyboardInfoList);
+            Config_File.Config.MakeSave(config);
+        }
+
+        private void Add_Settings_Menus(ContextMenuStrip trayMenu)
+        {
+            foreach (var keyboard in keyboards)
+            {
+                var settingsMenu = new ToolStripMenuItem(keyboard.Key);
+                for (global::System.Int32 i = 0; i < keyboard.Value.layer_count; i++)
+                {
+                    int j = i;
+                    settingsMenu.DropDownItems.Add($"Layer {i}", null, (s, e) => ChangeLayer(keyboard.Value, j));
+                }
+                trayMenu.Items.Add(settingsMenu);
+            }
+        }
+
+
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -97,9 +139,8 @@ namespace Bair_Keyboard_thingy
 
             //! fucked up id's: 01, 02, 04, 0C, 0D, 0E, 11, 12
             message[1] = ((byte)PC_TO_HID_IDs.LAYER_CHANGE);
-            message[2] = (byte)(HelloButton.IsChecked == true? 1 : 2);
+            //message[2] = (byte)(HelloButton.IsChecked == true? 1 : 2);
 
-            trippel_pedal.SendAsync(message);
 
             //if (HelloButton.IsChecked == true)
             //{
@@ -121,6 +162,7 @@ namespace Bair_Keyboard_thingy
             //! fucked up id's: 01, 02, 04, 0C, 0D, 0E, 11, 12
             message[1] = ((byte)PC_TO_HID_IDs.LAYER_CHANGE);
             message[2] = (byte)(layer);
+            Debug.WriteLine("layer: "+layer);
             keyboard.SendAsync(message);
         }
 
@@ -149,10 +191,34 @@ namespace Bair_Keyboard_thingy
             }
         }
 
-        private void LaunchProgram(int programID)
+        private void LaunchProgram(byte programID)
         {
-            Debug.Print("launching prism launcher");
-            Process.Start("C:\\PATH\\TO\\PrismLauncher\\prismlauncher.exe");
+            switch (programID)
+            {
+                case 1:
+                    Process.Start("C:\\Users\\tonyl\\Documents\\programs\\Gaming\\PrismLauncher\\prismlauncher.exe");
+                    break;
+                case 2:
+                    ProcessStartInfo startInfo = new ProcessStartInfo()
+                    {
+                        FileName = @"C:\Users\tonyl\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Discord Inc\Discord",
+                        UseShellExecute = true
+                    };
+                    Process.Start(startInfo);
+                    break;
+            }
+        }
+
+
+        private void Setup_Dropdown()
+        {
+            KeyboardDropdown.Items.Clear();
+            KeyboardDropdown.Items.Add("Pedal");
+            KeyboardDropdown.Items.Add("TrippelPedal");
+        }
+        private void KeyboardDropdown_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
         }
     }
 }

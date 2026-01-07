@@ -16,13 +16,15 @@ namespace Bair_Keyboard_thingy.QMK_API
     {
         private const int ReportLength = 33;
 
-        private readonly int _vendorId;
-        private readonly int _productId;
+        public readonly int _vendorId;
+        public readonly int _productId;
 
         private HidStream? _stream;
         private readonly object _streamLock = new();
         private CancellationTokenSource? _readerCts;
         private Task? _readerTask;
+        public string name;
+        public int layer_count;
 
         /// <summary>
         /// Raised when a report is received from the device. The byte[] contains the raw report bytes (length may be <= 33).
@@ -43,10 +45,12 @@ namespace Bair_Keyboard_thingy.QMK_API
             }
         }
 
-        public QMK_HID(int vendorId = 0x7C92, int productId = 0x0001)
+        public QMK_HID(int vendorId, int productId, string name, int layer_count)
         {
             _vendorId = vendorId;
             _productId = productId;
+            this.name = name;
+            this.layer_count = layer_count;
 
             // Watch for device attach/detach and attempt to connect automatically.
             DeviceList.Local.Changed += OnDeviceListChanged;

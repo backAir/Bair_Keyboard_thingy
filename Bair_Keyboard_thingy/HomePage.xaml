@@ -5,12 +5,26 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Bair_Keyboard_thingy"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        WindowStyle="None"
+        Title="BBBair's Keyboard thingy" Height="450" Width="800" FontFamily="Segoe UI Emoji">
     <Grid>
-        <TextBlock HorizontalAlignment="Center" Margin="0,167,0,0" TextWrapping="Wrap" Text="Hello how's it a going?" VerticalAlignment="Top"/>
-        <RadioButton x:Name="HelloButton" IsChecked="True" Content="Hello" HorizontalAlignment="Left" Margin="71,257,0,0" VerticalAlignment="Top"/>
-        <RadioButton x:Name="GoodbyeButton" Content="Goodbye" HorizontalAlignment="Left" Margin="522,257,0,0" VerticalAlignment="Top"/>
+        <TextBlock Text="🅱️WPF
+😀air's Keyboard thingy"
+               VerticalAlignment="Top"
+                FontFamily="Segoe UI Emoji"
+               Margin="10,0"
+               FontSize="14"/>
+        <TextBlock HorizontalAlignment="Left" Margin="631,11,0,0" TextWrapping="Wrap" VerticalAlignment="Top"><Run Language="fr-be" Text=":)"/></TextBlock>
         <Button x:Name="Button" Content="Display" HorizontalAlignment="Left" Margin="359,341,0,0" VerticalAlignment="Top" Click="Button_Click"/>
-
+        <ComboBox
+        x:Name="KeyboardDropdown"
+        HorizontalAlignment="Left"
+        Margin="116,0,0,0"
+        Width="150"
+        VerticalAlignment="Top" SelectionChanged="KeyboardDropdown_SelectionChanged">
+            <ComboBoxItem Content="Option 1"/>
+            <ComboBoxItem Content="Option 2"/>
+            <ComboBoxItem Content="Option 3"/>
+        </ComboBox>
     </Grid>
 </Window>
