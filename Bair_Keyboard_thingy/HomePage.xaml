@@ -3,28 +3,121 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Bair_Keyboard_thingy"
+        xmlns:emoji="clr-namespace:Emoji.Wpf;assembly=Emoji.Wpf"
         mc:Ignorable="d"
+
         WindowStyle="None"
-        Title="BBBair's Keyboard thingy" Height="450" Width="800" FontFamily="Segoe UI Emoji">
-    <Grid>
-        <TextBlock Text="🅱️WPF
-😀air's Keyboard thingy"
-               VerticalAlignment="Top"
-                FontFamily="Segoe UI Emoji"
-               Margin="10,0"
-               FontSize="14"/>
-        <TextBlock HorizontalAlignment="Left" Margin="631,11,0,0" TextWrapping="Wrap" VerticalAlignment="Top"><Run Language="fr-be" Text=":)"/></TextBlock>
-        <Button x:Name="Button" Content="Display" HorizontalAlignment="Left" Margin="359,341,0,0" VerticalAlignment="Top" Click="Button_Click"/>
-        <ComboBox
-        x:Name="KeyboardDropdown"
-        HorizontalAlignment="Left"
-        Margin="116,0,0,0"
-        Width="150"
-        VerticalAlignment="Top" SelectionChanged="KeyboardDropdown_SelectionChanged">
-            <ComboBoxItem Content="Option 1"/>
-            <ComboBoxItem Content="Option 2"/>
-            <ComboBoxItem Content="Option 3"/>
-        </ComboBox>
+        AllowsTransparency="True"
+        ResizeMode="CanResize"
+        Height="450"
+        Width="800"
+        Background="Transparent">
+
+    <!-- ================= RESOURCES ================= -->
+    <Window.Resources>
+
+        <Style x:Key="TitleBarButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="Foreground" Value="Gray"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}">
+                            <ContentPresenter
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#FFE5E5E5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CloseButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource TitleBarButtonStyle}">
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FFD32F2F"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+    </Window.Resources>
+
+    <!-- ================= ROOT GRID ================= -->
+    <Grid Background="#60FFFFFF">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ================= TITLE BAR ================= -->
+        <Grid Grid.Row="0"
+      Background="#FFFFFF"  
+            MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <!-- dark gray instead of white -->
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Title -->
+            <emoji:TextBlock
+        Text="🅱️air's Keyboard thingy"
+        FontSize="14"
+        VerticalAlignment="Center"
+        Margin="10,0"/>
+
+            <!-- Window buttons -->
+            <StackPanel Grid.Column="1"
+                Orientation="Horizontal"
+                VerticalAlignment="Stretch">
+                <Button Content="─"
+                Click="Minimize_Click"
+                Style="{StaticResource TitleBarButtonStyle}"/>
+
+                <Button Content="☐"
+                Click="Maximize_Click"
+                Style="{StaticResource TitleBarButtonStyle}"/>
+
+                <Button Content="✕"
+                Click="Close_Click"
+                Style="{StaticResource CloseButtonStyle}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- ================= CONTENT ================= -->
+        <Grid Grid.Row="1" Margin="10">
+
+            <TextBlock Text=":)"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Top"/>
+
+            <ComboBox x:Name="KeyboardDropdown"
+                      Width="150"
+                      VerticalAlignment="Top"
+                      Margin="0,40,0,0"
+                      SelectionChanged="KeyboardDropdown_SelectionChanged">
+                <ComboBoxItem Content="Option 1"/>
+                <ComboBoxItem Content="Option 2"/>
+                <ComboBoxItem Content="Option 3"/>
+            </ComboBox>
+
+            <Button Content="Display"
+                    Width="100"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Center"
+                    Click="Button_Click"/>
+
+        </Grid>
     </Grid>
 </Window>
