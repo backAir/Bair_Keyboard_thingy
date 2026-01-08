@@ -32,4 +32,8 @@
     </None>
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy &quot;$(ProjectDir)additional_files\*&quot; &quot;$(TargetDir)&quot; /E /I /Y" />
+  </Target>
+
 </Project>
