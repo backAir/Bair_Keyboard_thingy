@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using Microsoft.Win32;
+
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing;
@@ -22,11 +24,14 @@ namespace Bair_Keyboard_thingy
         public bool IsEnabled { get; set; }
     }
 
-    public class ProgramItem
+    public class ShortcutItem
     {
         public string Name { get; set; }
-        public bool IsEnabled { get; set; }
+        public string Path { get; set; }
+        public int ProgramId { get; set; }
     }
+
+    
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -34,7 +39,9 @@ namespace Bair_Keyboard_thingy
     public partial class MainWindow : Window
     {
         private Dictionary<string, QMK_API.QMK_HID> keyboards = new();
+        private List<ShortcutItem> ShortCuts = new();
 
+        private Dictionary<int, string> keycode_to_program = new();
         private ContextMenuStrip _trayMenu = new ContextMenuStrip();
         private NotifyIcon _notifyIcon = new NotifyIcon
             {
@@ -63,6 +70,27 @@ namespace Bair_Keyboard_thingy
             //KeyboardList.Items.Add("My Keyboard 2");
         }
 
+        public void AddShortcut(string name, string path, int program_id)
+        {
+            var shortcut_item = new ShortcutItem
+            {
+                Name = name,
+                Path = path,
+                ProgramId = program_id
+            };
+            ShortCuts.Add(shortcut_item);
+            ShortcutList.Items.Add(shortcut_item);
+        }
+
+        public void UpdateKeycodeShortcuts()
+        {
+            keycode_to_program = new();
+            foreach (var item in ShortCuts)
+            {
+                keycode_to_program.Add(item.ProgramId, item.Path);
+            }
+        }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -70,10 +98,28 @@ namespace Bair_Keyboard_thingy
             this.Closing += MainWindow_Closing!; // event for when we close the window
             //this.Hide();
 
-            Add_Keyboard(0x7C92, 0x0001, "pedal", 4);
-            Add_Keyboard(0x7C92, 0x0002, "trippel_pedal", 4);
-            Add_Keyboard(0x7C92, 0x0003, "numpad", 4);
+
+            AddShortcut(
+                "prism launcher",
+                @"C:\Users\tonyl\Documents\programs\Gaming\PrismLauncher\prismlauncher.exe",
+                1
+            );
+            AddShortcut(
+                "discord",
+                @"C:\Users\tonyl\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Discord Inc\Discord",
+                2
+            );
+            AddShortcut(
+                "Onboard Memory Manager",
+                @"C:\Users\tonyl\Documents\programs\Onboard Memory Manager.exe",
+                3
+            );
+
+            //Add_Keyboard(0x7C92, 0x0001, "pedal", 4);
+            //Add_Keyboard(0x7C92, 0x0002, "trippel_pedal", 4);
+            //Add_Keyboard(0x7C92, 0x0003, "numpad", 4);
             LoadConfig();
+            UpdateKeycodeShortcuts();
 
             // Optional: double-click on tray icon to restore window
             _notifyIcon.DoubleClick += (s, e) =>
@@ -139,7 +185,7 @@ namespace Bair_Keyboard_thingy
             this.Hide();
 
             // Optional: show balloon tip when minimized to tray
-            _notifyIcon.ShowBalloonTip(1000, "Bair Keyboard thingy", "Application minimized to tray.", ToolTipIcon.Info);
+            //_notifyIcon.ShowBalloonTip(1000, "Bair Keyboard thingy", "Application minimized to tray.", ToolTipIcon.Info);
         }
 
 
@@ -185,22 +231,21 @@ namespace Bair_Keyboard_thingy
             }
         }
 
-        private void LaunchProgram(byte programID)
+        private void LaunchProgram(byte program_id)
         {
-            switch (programID)
-            {
-                case 1:
-                    Process.Start("C:\\Users\\tonyl\\Documents\\programs\\Gaming\\PrismLauncher\\prismlauncher.exe");
-                    break;
-                case 2:
-                    ProcessStartInfo startInfo = new ProcessStartInfo()
-                    {
-                        FileName = @"C:\Users\tonyl\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Discord Inc\Discord",
-                        UseShellExecute = true
-                    };
-                    Process.Start(startInfo);
-                    break;
+            
+            var found = keycode_to_program.TryGetValue(program_id, out var path);
+            if (!found) {
+                _notifyIcon.ShowBalloonTip(1000, "Bair Keyboard thingy", $"No programs are set with the id {program_id}", ToolTipIcon.Info);
+                return; 
             }
+
+            ProcessStartInfo startInfo = new ProcessStartInfo()
+            {
+                FileName = path,
+                UseShellExecute = true
+            };
+            Process.Start(startInfo);
         }
 
 
@@ -222,6 +267,29 @@ namespace Bair_Keyboard_thingy
         private void Maximize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
+        private void BrowseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog openFileDialog = new()
+            {
+                //Filter = "Executable files (*.exe)|*.exe|All files (*.*)|*.*",
+                Title = "Select shortcut"
+            };
 
+            if (openFileDialog.ShowDialog() == true)
+            {
+                ShortcutPathBox.Text = openFileDialog.FileName;
+
+                // Auto-fill name if empty
+                if (string.IsNullOrWhiteSpace(ShortcutNameBox.Text))
+                {
+                    ShortcutNameBox.Text = System.IO.Path.GetFileNameWithoutExtension(openFileDialog.FileName);
+                }
+            }
+        }
+
+        private void AddShortcut_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

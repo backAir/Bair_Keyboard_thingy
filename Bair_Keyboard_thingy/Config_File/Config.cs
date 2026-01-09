@@ -28,6 +28,22 @@ namespace Bair_Keyboard_thingy.Config_File
         }
     }
 
+    public struct ShortcutInfo
+    {
+
+        public string Name { get; set; }
+        [JsonConverter(typeof(HexIntConverter))]
+        public int KeyCode { get; set; }
+        public string Path { get; set; }
+
+        public ShortcutInfo(string Name, string Path, int KeyCode)
+        {
+            this.Name = Name;
+            this.Path = Path;
+            this.KeyCode = KeyCode;
+        }
+    }
+
     public class ConfigSave
     {
         public List<KeyboardInfo> Keyboards { get; set; }
